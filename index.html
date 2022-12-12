@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .buttonStyle {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 10px;
+
+        }
+
+        .body-container {
+            width: 380px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid black;
+            padding: 10px;
+            border-radius: 20px 20px 20px 20px;
+        }
+
+
+        .container-url {
+            color: red;
+            width: fit-content;
+        }
+
+        .img-container {
+            position: relative;
+        }
+
+        .author-container {
+            position: absolute;
+            z-index: 1;
+        }
+
+    </style>
+</head>
+<body>
+<div id="news-fact"></div>
+
+
+<div id="response-container" class="container"></div>
+
+<div class='buttonStyle'>
+    <button type="button" id="my-previous">previous</button>
+    <button type="button" id="my-next">Next</button>
+
+
+</div>
+
+<script>
+    let count = 1
+    let response = []
+
+    const getData = (count) => {
+        let NEWS_URL = `https://61924d4daeab5c0017105f1a.mockapi.io/news?page=${count}&limit=10`;
+        const containers = document.getElementById('response-container');
+        fetch(NEWS_URL)
+            .then(response => response.json())
+            .then(responseJson => {
+                response = responseJson
+                containers.innerHTML = response.map(response => `<div class="body-container" id = "nextPage"
+onclick="nextPage(${response.id})"><img class="img-container" src=${response.avatar}/><b>${response.title}</b>
+<span class="container-url">${response.url}</span> <span class="author-container">${response.author}</span>
+</div>`).join('');
+
+            })
+
+    }
+
+    const nextPage = (id) => {
+        console.log(id, "showId")
+        console.log("hello world", "Lets go")
+        sessionStorage.setItem('myData', id);
+        window.location = `http://localhost:63342/Credo/detail.html`;
+    }
+
+
+    getData(count)
+
+
+    let btn = document.getElementById('my-previous');
+
+    let btnNext = document.getElementById("my-next");
+
+    btn.addEventListener('click', function () {
+        if (count > 1) {
+            count -= 1
+            getData(count)
+        }
+
+    });
+
+
+    btnNext.addEventListener('click', function () {
+            count++
+            getData(count)
+        }
+    );
+
+
+</script>
+</body>
+</html>

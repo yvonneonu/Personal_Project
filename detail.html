@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<style>
+    .form {
+        display: flex;
+        flex-direction: column;
+        width: 300px;
+        justify-content: center;
+    }
+
+    .form textArea {
+
+    }
+
+    .form button {
+
+        margin-top: 5px;
+        width: 60px;
+    }
+
+    .edit {
+        display: inline;
+    }
+
+    #myModal {
+        display: none;
+    }
+
+    #myModal.show {
+        display: block;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 400px;
+        height: 200px;
+        padding: 20px;
+        background-color: white;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .edit-comment-button {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+
+    }
+
+    .container-url {
+        color: red;
+        width: fit-content;
+    }
+
+    .img-container {
+        position: relative;
+    }
+
+    .author-container {
+        position: absolute;
+        z-index: 1;
+    }
+
+    .body-container {
+        width: 380px;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid black;
+        padding: 10px;
+        border-radius: 20px 20px 20px 20px;
+    }
+
+
+</style>
+<body>
+<div id="container"></div>
+<div id="comments-container"></div>
+<div id="comments-new-container"> </div>
+<div class="form"><textarea id="my-textarea" rows="2" cols="50" class="textArea"></textarea>
+    <button class="button" onclick="postComment()"> Submit</button>
+</div>
+
+<div id="myModal">
+    <h1>Edit Comment</h1>
+    <textarea id="edit-textarea" value="defaultvalue" rows="2" cols="50" class="textArea-edit"></textarea>
+    <div class="edit-comment-button">
+        <button onclick="closeModal()">Close</button>
+        <button onclick="editComment(event)" type="button">Submit</button>
+    </div>
+</div>
+
+<script>
+    let response = {}
+    let responseComment = []
+    const data = sessionStorage.getItem('myData');
+    let newsid = -1
+    let count = 1
+
+
+    const commentContainer = document.getElementById('comments-container');
+    const getNextData = () => {
+        let NEWS_URL = `https://61924d4daeab5c0017105f1a.mockapi.io/news/${data}`;
+        const containers = document.getElementById('container');
+        fetch(NEWS_URL)
+            .then(response => response.json())
+            .then(responseJson => {
+                response = responseJson
+                console.log(response, "data value")
+                containers.innerHTML = `<div class="body-container"><img class="img-container" src=${response.avatar}/><b>${response.title}</b>
+<span class="container-url">${response.url}</span> <span class="author-container">${response.author}</span>
+</>`
+            })
+    }
+
+    const getComment = () => {
+        fetch(`https://61924d4daeab5c0017105f1a.mockapi.io/news/${data}/comments?page=${count}&limit=30`)
+            .then(response => response.json())
+            .then(responseJson => {
+                console.log(responseJson, "responseofyou")
+                responseComment = responseJson
+
+                commentContainer.innerHTML = responseComment.map(response => `<div> <span class="edit"
+ id="editComment" >${response.comment}</span> <button onclick="openModal(${response.id}, \`${response.comment}\`)" >edit</button>
+ <button onclick="deleteComment(${response.id})" >Delete</button>
+ </div>`).join('');
+            })
+    }
+
+
+    getNextData()
+    getComment()
+
+    const postComment = () => {
+        let textarea = document.getElementById('my-textarea');
+
+        let text = textarea.value;
+        console.log(text, "textarea")
+        if (text.trim().length < 1) {
+            alert("You cant send an empty comment")
+
+        } else {
+            fetch(`https://61924d4daeab5c0017105f1a.mockapi.io/news/${data}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify({
+                    "newsId": data,
+                    "name": response?.author,
+                    "avatar": response?.avatar,
+                    "comment": text
+                })
+
+            }).then(response => response.json().then(
+                responseJson => {
+                    alert("Your Comment was added successfully")
+                    window.location.reload()
+
+                }
+            )).catch(function (error
+
+                ) {
+                    alert("An error occured your message was not sent Added")
+
+                }
+
+            )
+
+        }
+    }
+
+    const deleteComment = (id) => {
+            fetch(`https://61924d4daeab5c0017105f1a.mockapi.io/news/${data}/comments/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+            }).then(response => {
+                if (response.ok) {
+                    alert("successfully deleted")
+                    window.location.reload()
+                } else {
+                    alert(" not deleted")
+                }
+            });
+
+    }
+
+
+    const editComment = () => {
+        let textarea = document.getElementById('edit-textarea');
+        let text = textarea.value;
+        console.log(text, "textishere")
+        if (newsid === -1) {
+            alert("please select a valid news")
+
+        } else {
+
+            fetch(`https://61924d4daeab5c0017105f1a.mockapi.io/news/${data}/comments/${newsid}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify({
+                    "comment": text
+                })
+            }).then(response => response.json())
+
+                .then(
+                    response => {
+                        alert("successfully edited")
+                        window.location.reload()
+                    }
+                ).catch(function (error) {
+                alert("An error occured your message was not sent")
+                closeModal()
+
+            });
+
+        }
+
+    }
+
+
+    const openModal = (id, text) => {
+        console.log("bamidele", "bamidele")
+        newsid = id
+        // newVal = text
+        console.log(newsid, "showpdtul")
+        document.getElementById("edit-textarea").innerHTML = text;
+
+        let modal = document.getElementById('myModal');
+        modal.classList.add('show');
+
+    }
+
+    const closeModal = () => {
+        document.getElementById("edit-textarea").innerHTML = "";
+        newsid = -1
+        let modal = document.getElementById('myModal');
+        modal.classList.remove('show');
+    }
+
+
+</script>
+
+</body>
+</html>
